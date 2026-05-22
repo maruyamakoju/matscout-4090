@@ -1,0 +1,42 @@
+name: catalyst
+n_generate: 4000
+n_relax: 1000
+top_k: 200
+
+reaction_targets:
+  - HER
+  - OER
+  - CO2RR
+
+elements:
+  include_any: [Fe, Co, Ni, Mn, Cu, Mo, W, V, Ti]
+  exclude: [Hg, Cd, Tl, Be, U, Th, Pu]
+  penalize: [Ir, Pt, Pd, Ru]
+
+filters:
+  max_nsites: 80
+  max_e_hull_initial: 0.12
+  max_predicted_e_hull: 0.10
+
+surfaces:
+  miller_indices:
+    - [1, 0, 0]
+    - [1, 1, 0]
+    - [1, 1, 1]
+  min_slab_thickness_a: 8
+  vacuum_a: 15
+
+adsorbates:
+  HER: [H]
+  OER: [O, OH, OOH]
+  CO2RR: [CO2, CO, COOH]
+
+objectives:
+  surface_stability: 0.20
+  adsorption_target: 0.25
+  active_site_diversity: 0.15
+  conductivity_proxy: 0.10
+  corrosion_stability: 0.10
+  abundance: 0.10
+  synthesizability: 0.05
+  novelty: 0.05

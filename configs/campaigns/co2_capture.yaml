@@ -1,0 +1,36 @@
+name: co2_capture
+n_generate: 0
+n_screen: 40000
+top_k: 200
+
+source_priority:
+  - core_mof
+  - qmof
+  - hmof
+
+elements:
+  include_any: [Mg, Ca, Zn, Zr, Al, Ti, Fe]
+  exclude: [Hg, Cd, Tl, Be, U, Th, Pu]
+
+filters:
+  min_pld_a: 3.0
+  max_pld_a: 8.0
+  min_void_fraction: 0.25
+
+targets:
+  mode: direct_air_capture
+  require_water_tolerance: true
+  prefer_low_regeneration_energy: true
+
+descriptors:
+  require_pore_geometry: true
+
+objectives:
+  co2_affinity: 0.20
+  selectivity: 0.15
+  water_tolerance: 0.15
+  regeneration: 0.15
+  pore_geometry: 0.10
+  stability: 0.10
+  synthesizability: 0.10
+  novelty: 0.05

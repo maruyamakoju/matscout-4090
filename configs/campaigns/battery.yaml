@@ -1,0 +1,36 @@
+name: battery
+n_generate: 8000
+n_relax: 2500
+top_k: 200
+
+elements:
+  mobile_ions: [Li, Na, Mg, Zn]
+  anions: [O, S, Se, P, Si, B, N, F, Cl, Br, I]
+  framework_cations: [Al, Ga, In, Ti, Zr, Hf, Nb, Ta, V, Mn, Fe, Co, Ni, Sc, Y, La]
+  include_any: [Li, Na, Mg, Zn]
+  exclude: [Hg, Cd, Tl, Be, Pb, U, Th, Pu]
+
+filters:
+  max_nsites: 80
+  max_e_hull_initial: 0.12
+  max_predicted_e_hull: 0.10
+  min_bandgap_electrolyte: 2.5
+
+target_structures:
+  - garnet
+  - NASICON
+  - LISICON
+  - argyrodite
+  - anti-perovskite
+  - spinel
+  - olivine
+  - layered oxide
+
+objectives:
+  stability: 0.25
+  mobile_ion: 0.20
+  migration_proxy: 0.15
+  electrochemical_window: 0.15
+  synthesizability: 0.10
+  novelty: 0.10
+  abundance: 0.05

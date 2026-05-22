@@ -1,0 +1,29 @@
+name: semiconductor
+n_generate: 6000
+n_relax: 2000
+top_k: 200
+
+elements:
+  include_any: [Si, Ge, Sn, B, Al, Ga, In, N, P, Sb, S, Se, Te, Zn, Mg, Ca, Sr, Ba, Ti, Zr, Hf, Nb, Cu, Ag, Bi]
+  exclude: [Hg, Cd, Tl, Be, U, Th, Pu]
+  penalize: [As, Pb]
+
+filters:
+  max_nsites: 80
+  max_e_hull_initial: 0.10
+  max_predicted_e_hull: 0.08
+
+targets:
+  bandgap_ev: [0.5, 4.5]
+  bandgap_power_electronics: [2.5, 5.0]
+  bandgap_optoelectronic: [1.2, 3.0]
+
+objectives:
+  stability: 0.20
+  bandgap_target: 0.25
+  direct_gap_proxy: 0.15
+  effective_mass_proxy: 0.10
+  defect_tolerance: 0.10
+  synthesizability: 0.10
+  abundance: 0.05
+  novelty: 0.05

@@ -1,0 +1,30 @@
+name: solar
+n_generate: 6000
+n_relax: 2000
+top_k: 200
+
+elements:
+  include_any: [Cu, Ag, Zn, Sn, Ge, Bi, Sb, In, Ga, Na, K, Rb, Cs, S, Se, Te, I, Br, Cl]
+  exclude: [Hg, Cd, Tl, Be, U, Th, Pu]
+  penalize: [Pb, Te, In]
+
+filters:
+  max_nsites: 80
+  max_e_hull_initial: 0.10
+  max_predicted_e_hull: 0.08
+
+targets:
+  bandgap_single_junction: [1.1, 1.6]
+  bandgap_tandem: [1.6, 1.9]
+  bandgap_indoor_pv: [1.8, 2.2]
+  mode: single_junction
+
+objectives:
+  bandgap: 0.25
+  stability: 0.20
+  direct_gap_proxy: 0.15
+  absorption_proxy: 0.10
+  defect_tolerance: 0.10
+  abundance: 0.10
+  synthesizability: 0.05
+  novelty: 0.05

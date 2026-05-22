@@ -1,0 +1,20 @@
+device: auto          # auto | cuda | cpu
+seed: 42
+data_dir: data
+output_dir: outputs
+cache_dir: data/external/cache
+
+relaxation:
+  primary_model: chgnet
+  secondary_models:
+    - mace_mp
+  fmax_ev_a: 0.05
+  max_steps: 300
+  cell_relax: true
+  optimizer: FIRE
+  max_volume_change_pct: 30
+  max_lattice_angle_change_deg: 15
+  reject_if_atoms_too_close: true
+  min_interatomic_distance_a: 0.75
+
+extra_exclude_elements: []
