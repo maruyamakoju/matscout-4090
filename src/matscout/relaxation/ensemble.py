@@ -115,13 +115,46 @@ def _classify(record: CandidateRecord, campaign: CampaignConfig) -> str:
     return "KEEP"
 
 
+_RELAXED_FIELDS = (
+    "structure_cif", "structure_hash", "nsites", "spacegroup_symbol", "spacegroup_number",
+    "ml_relaxed", "ml_model", "ml_energy_per_atom", "ml_e_above_hull",
+    "relaxation_converged", "max_force_ev_a", "volume_change_pct",
+    "uncertainty_score", "rejection_reason", "tags",
+)
+
+
+def _copy_relaxed_state(dst: CandidateRecord, src: CandidateRecord) -> None:
+    for f in _RELAXED_FIELDS:
+        setattr(dst, f, getattr(src, f))
+
+
+def _load_checkpoint(checkpoint_path) -> dict[str, CandidateRecord]:
+    from pathlib import Path
+
+    from ..data.store import load_parquet
+
+    if not checkpoint_path or not Path(checkpoint_path).exists():
+        return {}
+    try:
+        prior = load_parquet(checkpoint_path)
+    except Exception:
+        return {}
+    # only treat fully-processed records as done (relaxed or explicitly rejected)
+    return {r.candidate_id: r for r in prior if r.ml_relaxed or r.rejection_reason}
+
+
 def relax_records(
     records: list[CandidateRecord],
     global_cfg: GlobalConfig,
     campaign: CampaignConfig,
     limit: int | None = None,
     compute_hull: bool = True,
+    checkpoint_path: str | None = None,
+    checkpoint_every: int = 25,
+    resume: bool = True,
 ) -> list[CandidateRecord]:
+    from ..data.store import save_parquet
+
     primary, secondaries = build_relaxers(global_cfg)
     subset = records[:limit] if limit else records
 
@@ -135,13 +168,21 @@ def relax_records(
             r.tags.append("dry_relax")
         return subset
 
+    done = _load_checkpoint(checkpoint_path) if resume else {}
+    if done:
+        console.print(f"[cyan]Resume:[/] {len(done)} candidates already relaxed (from checkpoint)")
+
     sec_names = [s.name for s in secondaries if s.available()]
     console.print(
         f"[cyan]Relaxing[/] {len(subset)} candidates on [bold]{primary.device}[/] "
         f"(primary={primary.name}, secondary={sec_names or 'none'})"
     )
 
+    processed = 0
     for r in track(subset, description=f"relax/{campaign.name}"):
+        if r.candidate_id in done:
+            _copy_relaxed_state(r, done[r.candidate_id])
+            continue
         res = primary.relax(r.get_structure())
         if not res.ok:
             r.rejection_reason = f"relax_failed:{res.error}"
@@ -170,4 +211,11 @@ def relax_records(
 
         verdict = _classify(r, campaign)
         r.tags.append(f"verdict:{verdict}")
+
+        processed += 1
+        if checkpoint_path and processed % checkpoint_every == 0:
+            save_parquet(subset, checkpoint_path)
+
+    if checkpoint_path:
+        save_parquet(subset, checkpoint_path)
     return subset

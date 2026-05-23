@@ -2,17 +2,32 @@
 
 from __future__ import annotations
 
-import shutil
-import warnings
-from pathlib import Path
+import sys
 
-import typer
-from rich.console import Console
+# Force UTF-8 console so output with scientific symbols (Å, η, ΔV, →) doesn't crash on
+# legacy code pages (e.g. Japanese cp932 Windows). Must run before any rich Console init.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
-from . import CAMPAIGNS, __version__
-from .config.loader import REPO_ROOT, available_campaigns, load_campaign_config, load_global_config
-from .data.store import load_parquet, save_parquet
-from .workflows.paths import Paths
+import shutil  # noqa: E402
+import warnings  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+import typer  # noqa: E402
+from rich.console import Console  # noqa: E402
+
+from . import CAMPAIGNS, __version__  # noqa: E402
+from .config.loader import (  # noqa: E402
+    REPO_ROOT,
+    available_campaigns,
+    load_campaign_config,
+    load_global_config,
+)
+from .data.store import load_parquet, save_parquet  # noqa: E402
+from .workflows.paths import Paths  # noqa: E402
 
 warnings.simplefilter("ignore")
 app = typer.Typer(add_completion=False, help="MatScout-4090: AI-for-materials discovery pipeline.")
@@ -162,6 +177,15 @@ def catalyst_surfaces(
     write_surface_report(results, g)
 
 
+@app.command()
+def benchmark():
+    """Validate the pipeline: bandgap surrogate accuracy, relaxation sanity, determinism."""
+    g = load_global_config()
+    from .workflows.benchmark import run_benchmark
+
+    run_benchmark(g)
+
+
 @app.command("active-loop")
 def active_loop_cmd(
     campaign: str = typer.Option(...),
@@ -235,6 +259,12 @@ def run_campaign_cmd(
 
         figs = make_all_figures(all_ranked, g)
         console.print(f"[green]Figures:[/] {figs}")
+
+    from .workflows.provenance import write_run_manifest
+
+    counts = {k: len(v) for k, v in all_ranked.items()}
+    manifest = write_run_manifest(g, names, extra={"survivors_per_campaign": counts})
+    console.print(f"[green]Run manifest:[/] {manifest}")
     console.rule("[bold green]Done")
 
 

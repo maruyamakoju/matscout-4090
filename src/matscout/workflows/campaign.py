@@ -44,11 +44,11 @@ def stage_generate(seeds, campaign, g, n=None):
     return kept
 
 
-def stage_relax(records, campaign, g, limit=None):
+def stage_relax(records, campaign, g, limit=None, checkpoint_path=None):
     # only relax structurally-valid candidates
     valid = [r for r in records if not r.rejection_reason]
     limit = limit if limit is not None else campaign.n_relax
-    relax_records(valid, g, campaign, limit=limit)
+    relax_records(valid, g, campaign, limit=limit, checkpoint_path=checkpoint_path)
     return records
 
 
@@ -76,7 +76,8 @@ def run_campaign(
     cands = stage_generate(seeds, campaign, g, n=n_generate)
     save_parquet(cands, paths.generated(name))
 
-    cands = stage_relax(cands, campaign, g, limit=relax_limit)
+    cands = stage_relax(cands, campaign, g, limit=relax_limit,
+                        checkpoint_path=str(paths.relaxed(name)))
     save_parquet(cands, paths.relaxed(name))
 
     cands = stage_score(cands, campaign, g, seeds=seeds)
