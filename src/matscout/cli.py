@@ -142,6 +142,26 @@ def export_dft(campaign: str = typer.Option(...), top_k: int = typer.Option(50))
         export_dft_queue(ranked, c, g, top_k=top_k)
 
 
+@app.command("catalyst-surfaces")
+def catalyst_surfaces(
+    top_k: int = typer.Option(8, help="number of top bulk catalysts to analyze"),
+    miller: str = typer.Option("111", help="Miller index, e.g. 111 or 100"),
+):
+    """Surface + adsorbate analysis (HER/OER/CO2RR) on the top bulk catalyst candidates."""
+    g = load_global_config()
+    paths = Paths(g)
+    c = load_campaign_config("catalyst")
+    if not paths.ranked("catalyst").exists():
+        console.print("[red]No catalyst ranking found.[/] Run `matscout run-campaign --campaign catalyst` first.")
+        raise typer.Exit(1)
+    ranked = load_parquet(paths.ranked("catalyst"))
+    mi = tuple(int(x) for x in miller)
+    from .workflows.catalyst_surface import run_catalyst_surfaces, write_surface_report
+
+    results = run_catalyst_surfaces(ranked, c, g, top_k=top_k, miller=mi)
+    write_surface_report(results, g)
+
+
 @app.command()
 def report(campaign: str = typer.Option(...)):
     """Write Markdown shortlist report(s)."""

@@ -114,6 +114,46 @@ K_POINTS automatic
 """
 
 
+def _vasp_job_script(formula: str) -> str:
+    return f"""#!/bin/bash
+#SBATCH --job-name=ms_{formula}
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=32
+#SBATCH --time=24:00:00
+#SBATCH --partition=CHANGE_ME
+
+# Assemble POTCAR first (see POTCAR.spec.txt) — concatenate POTCARs in POSCAR species order:
+#   cat $VASP_PP/Na_pv/POTCAR $VASP_PP/Cl/POTCAR > POTCAR
+module load vasp 2>/dev/null || true
+set -e
+
+# 1) cell + ionic relaxation
+cp INCAR.relax INCAR
+srun vasp_std
+cp CONTCAR POSCAR
+
+# 2) static (DOS / accurate energy)
+cp INCAR.static INCAR
+srun vasp_std
+echo "done: {formula}"
+"""
+
+
+def _qe_job_script(formula: str) -> str:
+    return f"""#!/bin/bash
+#SBATCH --job-name=ms_{formula}
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=32
+#SBATCH --time=24:00:00
+#SBATCH --partition=CHANGE_ME
+
+# Place SSSP pseudopotentials (*.UPF) under ./pseudo (names must match relax.in).
+module load quantum-espresso 2>/dev/null || true
+srun pw.x -in relax.in > relax.out
+echo "done: {formula}"
+"""
+
+
 def export_one(record: CandidateRecord, out_dir, rank: int) -> dict:
     structure = record.get_structure()
     priority = _priority(record)
@@ -134,6 +174,8 @@ def export_one(record: CandidateRecord, out_dir, rank: int) -> dict:
     (vasp / "POTCAR.spec.txt").write_text(_potcar_spec(structure), encoding="utf-8")
 
     (qe / "relax.in").write_text(_qe_relax(structure), encoding="utf-8")
+    (vasp / "run_vasp.slurm").write_text(_vasp_job_script(record.reduced_formula), encoding="utf-8")
+    (qe / "run_qe.slurm").write_text(_qe_job_script(record.reduced_formula), encoding="utf-8")
 
     meta = {
         "candidate_id": record.candidate_id,
@@ -166,9 +208,20 @@ def export_dft_queue(ranked, campaign: CampaignConfig, g: GlobalConfig, top_k: i
         shutil.rmtree(out_dir)  # idempotent: clear previous run's decks
     out_dir.mkdir(parents=True, exist_ok=True)
     counts = {"A": 0, "B": 0, "C": 0}
+    folders = []
     for i, r in enumerate(ranked[:top_k], start=1):
         info = export_one(r, out_dir, i)
         counts[info["priority"]] += 1
+        folders.append(info["folder"])
+    # submit decks in priority order (A first), VASP by default
+    submit = ["#!/bin/bash",
+              "# Submit MatScout DFT decks in priority order (A -> B -> C).",
+              "# Edit run_vasp.slurm partition/modules and assemble POTCAR before running.",
+              "set -e", 'cd "$(dirname "$0")"']
+    for folder in sorted(folders):  # priority prefix sorts A_ < B_ < C_
+        submit.append(f'( cd "{folder}/vasp" && sbatch run_vasp.slurm )')
+    sq = out_dir / "submit_queue.sh"
+    sq.write_text("\n".join(submit) + "\n", encoding="utf-8")
     console.print(f"[green]DFT queue[/] {campaign.name}: {sum(counts.values())} decks "
                   f"(A={counts['A']} B={counts['B']} C={counts['C']}) -> {out_dir}")
     return counts
