@@ -63,6 +63,24 @@ def _incar(structure: Structure, calc_mode: str, use_ldau: bool, metallic: bool 
     return "\n".join(lines) + "\n"
 
 
+def _incar_hse06(structure: Structure, use_ldau: bool) -> str:
+    """Static HSE06 hybrid-functional INCAR for an accurate bandgap on a relaxed structure."""
+    lines = [
+        f"SYSTEM = MatScout {structure.composition.reduced_formula} HSE06",
+        "PREC = Accurate", "ENCUT = 520", "EDIFF = 1E-6",
+        "LHFCALC = .TRUE.", "HFSCREEN = 0.2", "AEXX = 0.25",
+        "ALGO = Damped", "TIME = 0.4", "PRECFOCK = Fast",
+        "ISMEAR = 0", "SIGMA = 0.05", "NSW = 0", "IBRION = -1",
+        "LORBIT = 11", "NEDOS = 3001", "LASPH = .TRUE.", "ISPIN = 2",
+        "LWAVE = .FALSE.", "LCHARG = .FALSE.",
+        "# Run on the relaxed CONTCAR; for the gap, inspect EIGENVAL / DOSCAR.",
+        "# Optional: add band-structure k-path for the explicit direct/indirect gap.",
+    ]
+    if use_ldau:
+        lines.append("# LDA+U usually dropped under HSE06; omit unless studying d-states.")
+    return "\n".join(lines) + "\n"
+
+
 def _potcar_spec(structure: Structure) -> str:
     els = [str(e) for e in structure.composition.elements]
     lines = ["# Recommended PBE PAW POTCAR labels (concatenate in this element order):"]
@@ -154,7 +172,7 @@ echo "done: {formula}"
 """
 
 
-def export_one(record: CandidateRecord, out_dir, rank: int) -> dict:
+def export_one(record: CandidateRecord, out_dir, rank: int, gap_refine: bool = False) -> dict:
     structure = record.get_structure()
     priority = _priority(record)
     folder = out_dir / f"{priority}_{rank:03d}_{record.reduced_formula}_{record.candidate_id.replace('::','-')}"
@@ -176,6 +194,8 @@ def export_one(record: CandidateRecord, out_dir, rank: int) -> dict:
     (qe / "relax.in").write_text(_qe_relax(structure), encoding="utf-8")
     (vasp / "run_vasp.slurm").write_text(_vasp_job_script(record.reduced_formula), encoding="utf-8")
     (qe / "run_qe.slurm").write_text(_qe_job_script(record.reduced_formula), encoding="utf-8")
+    if gap_refine:  # accurate bandgap matters for solar / semiconductor
+        (vasp / "INCAR.hse06").write_text(_incar_hse06(structure, use_ldau), encoding="utf-8")
 
     meta = {
         "candidate_id": record.candidate_id,
@@ -208,9 +228,10 @@ def export_dft_queue(ranked, campaign: CampaignConfig, g: GlobalConfig, top_k: i
         shutil.rmtree(out_dir)  # idempotent: clear previous run's decks
     out_dir.mkdir(parents=True, exist_ok=True)
     counts = {"A": 0, "B": 0, "C": 0}
+    gap_refine = campaign.name in {"solar", "semiconductor"}
     folders = []
     for i, r in enumerate(ranked[:top_k], start=1):
-        info = export_one(r, out_dir, i)
+        info = export_one(r, out_dir, i, gap_refine=gap_refine)
         counts[info["priority"]] += 1
         folders.append(info["folder"])
     # submit decks in priority order (A first), VASP by default

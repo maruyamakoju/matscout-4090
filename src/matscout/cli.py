@@ -162,6 +162,38 @@ def catalyst_surfaces(
     write_surface_report(results, g)
 
 
+@app.command("active-loop")
+def active_loop_cmd(
+    campaign: str = typer.Option(...),
+    rounds: int = typer.Option(3, help="number of active-learning rounds"),
+    expand: int = typer.Option(200, help="children proposed per round"),
+    relax: int = typer.Option(100, help="children relaxed per round"),
+    n_initial: int = typer.Option(None, help="initial candidates to generate"),
+):
+    """Active-learning loop: select (exploit/explore/diverse) -> mutate -> relax -> score (spec §8)."""
+    g = load_global_config()
+    paths = Paths(g)
+    c = load_campaign_config(campaign)
+    from .workflows.active_loop import run_active_loop
+    from .workflows.campaign import stage_fetch, stage_generate
+
+    seeds = load_parquet(paths.seeds(campaign)) if paths.seeds(campaign).exists() \
+        else stage_fetch(c, g, 1000)
+    save_parquet(seeds, paths.seeds(campaign))
+    initial = stage_generate(seeds, c, g, n=n_initial or min(c.n_generate, 200))
+    pool = run_active_loop(initial, seeds, c, g, rounds=rounds,
+                           expand_per_round=expand, relax_per_round=relax)
+    out = paths.interim(campaign) / "active_pool.parquet"
+    save_parquet(pool, out)
+    from .scoring.ranker import rank_records
+
+    ranked = rank_records(pool, c)
+    best = ranked[0] if ranked else None
+    console.print(f"[green]{campaign} active loop:[/] pool={len(pool)}, "
+                  f"best={best.reduced_formula if best else 'n/a'} "
+                  f"final={best.final_score if best else 0:.3f} -> {out}")
+
+
 @app.command()
 def report(campaign: str = typer.Option(...)):
     """Write Markdown shortlist report(s)."""
