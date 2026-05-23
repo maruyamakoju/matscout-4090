@@ -77,6 +77,17 @@ select = ["E", "F", "I", "UP", "B"]
 # B905: zip(strict=) not needed for equal-length paired lists; B007: intentional unused loop var.
 ignore = ["E501", "B008", "E702", "B905", "B007"]
 
+[tool.mypy]
+python_version = "3.11"
+files = ["src/matscout"]
+ignore_missing_imports = true       # pymatgen/ase/chgnet/mace ship partial or no stubs
+no_implicit_optional = true
+warn_redundant_casts = true
+# Pragmatic: we don't require full annotations on every function (scientific code is
+# heavily array-/library-driven), but we DO catch None-safety and attribute errors.
+disallow_untyped_defs = false
+check_untyped_defs = true
+
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]

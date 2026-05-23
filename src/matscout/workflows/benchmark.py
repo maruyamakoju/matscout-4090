@@ -66,11 +66,14 @@ def relaxation_benchmark(g: GlobalConfig, n: int = 6) -> dict:
     if not relaxer.available():
         return {"status": "skipped (no torch/chgnet)"}
     seeds = seed_structures()[:n]
-    conv, forces, dvol = 0, [], []
+    conv = 0
+    forces: list[float] = []
+    dvol: list[float] = []
     rows = []
     for label, _fam, s in seeds:
         res = relaxer.relax(s)
-        if res.ok:
+        if res.ok and res.max_force_ev_a is not None and res.volume_change_pct is not None \
+                and res.energy_per_atom is not None:
             conv += int(res.converged)
             forces.append(res.max_force_ev_a)
             dvol.append(abs(res.volume_change_pct))

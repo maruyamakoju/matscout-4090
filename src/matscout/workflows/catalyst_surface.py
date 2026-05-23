@@ -66,7 +66,7 @@ def _gas_reference_energies_cached(device: str) -> tuple:
         for name, mol in GAS_MOLECULES.items():
             try:
                 boxed = mol.get_boxed_structure(14, 14, 14)
-                res = relaxer.relax(boxed)
+                res = relaxer.relax(boxed)  # type: ignore[arg-type]
                 if res.ok and res.energy_per_atom is not None:
                     out[name] = res.energy_per_atom * len(boxed)
             except Exception:
@@ -130,7 +130,7 @@ def evaluate_surface(record: CandidateRecord, reactions, g: GlobalConfig,
             return res
         res.miller = miller
         slab_relax = relaxer.relax(slab)
-        if not slab_relax.ok:
+        if not slab_relax.ok or slab_relax.energy_per_atom is None:
             res.error = "slab_relax_failed"
             return res
         e_slab = slab_relax.energy_per_atom * len(slab)

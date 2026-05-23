@@ -19,6 +19,8 @@ console = Console()
 
 def _explain(record: CandidateRecord, campaign: CampaignConfig) -> list[str]:
     module = APP_SCORERS.get(campaign.name)
+    if module is None:
+        return [f"{record.reduced_formula}: score={record.final_score}"]
     try:
         result = module.score_candidate(record, campaign, {"cohort_min_energy": {}})
         return module.explain_score(record, result)

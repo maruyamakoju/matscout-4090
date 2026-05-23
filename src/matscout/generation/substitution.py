@@ -18,7 +18,7 @@ from .pools import build_substitution_map, passes_element_filter
 
 def _apply_substitution(structure: Structure, mapping: dict[str, str]) -> Structure:
     new = structure.copy()
-    new.replace_species(dict(mapping))
+    new.replace_species(dict(mapping))  # type: ignore[arg-type]
     return new
 
 

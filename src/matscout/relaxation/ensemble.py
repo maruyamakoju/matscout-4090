@@ -66,6 +66,8 @@ def _geometry_rmsd(s1, s2) -> float | None:
 
 def _apply_relaxed(record: CandidateRecord, result: RelaxResult, model_name: str) -> None:
     relaxed = result.relaxed_structure
+    if relaxed is None:  # only called for successful relaxations; guard for type-safety
+        return
     record.structure_cif = relaxed.to(fmt="cif")
     record.structure_hash = structure_hash(relaxed)
     record.nsites = len(relaxed)

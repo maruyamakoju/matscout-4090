@@ -8,7 +8,7 @@ import sys
 # legacy code pages (e.g. Japanese cp932 Windows). Must run before any rich Console init.
 for _stream in (sys.stdout, sys.stderr):
     try:
-        _stream.reconfigure(encoding="utf-8", errors="replace")
+        _stream.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
     except Exception:
         pass
 

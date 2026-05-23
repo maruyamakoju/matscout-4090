@@ -54,7 +54,7 @@ def compute_e_above_hull(
             entry_id="candidate",
         )
         pd = PhaseDiagram(entries + [cand_entry])
-        return float(pd.get_e_above_hull(cand_entry))
+        return float(pd.get_e_above_hull(cand_entry))  # type: ignore[arg-type]
     except Exception:
         return None
 

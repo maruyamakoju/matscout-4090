@@ -12,22 +12,22 @@ from pymatgen.core import Molecule
 
 # Adsorbates (binding atom first). Geometries are approximate; ML relaxation refines them.
 ADSORBATES: dict[str, Molecule] = {
-    "H": Molecule(["H"], [[0, 0, 0]]),
-    "O": Molecule(["O"], [[0, 0, 0]]),
-    "OH": Molecule(["O", "H"], [[0, 0, 0], [0, 0, 0.97]]),
-    "OOH": Molecule(["O", "O", "H"], [[0, 0, 0], [1.06, 0, 0.70], [1.00, 0, 1.67]]),
-    "CO": Molecule(["C", "O"], [[0, 0, 0], [0, 0, 1.16]]),
-    "CO2": Molecule(["C", "O", "O"], [[0, 0, 0], [0, 0, 1.16], [0, 0, -1.16]]),
+    "H": Molecule(["H"], [[0.0, 0.0, 0.0]]),
+    "O": Molecule(["O"], [[0.0, 0.0, 0.0]]),
+    "OH": Molecule(["O", "H"], [[0.0, 0.0, 0.0], [0.0, 0.0, 0.97]]),
+    "OOH": Molecule(["O", "O", "H"], [[0.0, 0.0, 0.0], [1.06, 0.0, 0.70], [1.00, 0.0, 1.67]]),
+    "CO": Molecule(["C", "O"], [[0.0, 0.0, 0.0], [0.0, 0.0, 1.16]]),
+    "CO2": Molecule(["C", "O", "O"], [[0.0, 0.0, 0.0], [0.0, 0.0, 1.16], [0.0, 0.0, -1.16]]),
     "COOH": Molecule(["C", "O", "O", "H"],
-                     [[0, 0, 0], [0, 1.02, 0.69], [0, -1.06, 0.66], [0, -0.97, 1.62]]),
+                     [[0.0, 0.0, 0.0], [0.0, 1.02, 0.69], [0.0, -1.06, 0.66], [0.0, -0.97, 1.62]]),
 }
 
 # Gas-phase reference molecules whose ML energies define E_ref.
 GAS_MOLECULES: dict[str, Molecule] = {
-    "H2": Molecule(["H", "H"], [[0, 0, 0], [0, 0, 0.74]]),
-    "H2O": Molecule(["O", "H", "H"], [[0, 0, 0], [0.76, 0, 0.59], [-0.76, 0, 0.59]]),
-    "CO": Molecule(["C", "O"], [[0, 0, 0], [0, 0, 1.16]]),
-    "CO2": Molecule(["C", "O", "O"], [[0, 0, 0], [0, 0, 1.16], [0, 0, -1.16]]),
+    "H2": Molecule(["H", "H"], [[0.0, 0.0, 0.0], [0.0, 0.0, 0.74]]),
+    "H2O": Molecule(["O", "H", "H"], [[0.0, 0.0, 0.0], [0.76, 0.0, 0.59], [-0.76, 0.0, 0.59]]),
+    "CO": Molecule(["C", "O"], [[0.0, 0.0, 0.0], [0.0, 0.0, 1.16]]),
+    "CO2": Molecule(["C", "O", "O"], [[0.0, 0.0, 0.0], [0.0, 0.0, 1.16], [0.0, 0.0, -1.16]]),
 }
 
 # Gas-phase free-energy corrections (ZPE + integrated heat capacity - TS) at 298 K, eV.

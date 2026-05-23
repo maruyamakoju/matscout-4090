@@ -83,14 +83,14 @@ class AseRelaxer:
 
             atoms = AseAtomsAdaptor.get_atoms(structure)
             atoms.calc = self._calc_instance()
-            target = atoms
+            target: object = atoms  # FIRE accepts Atoms or a cell filter
             if self.relax_cell:
                 try:
                     from ase.filters import FrechetCellFilter
 
                     target = FrechetCellFilter(atoms)
                 except Exception:
-                    from ase.constraints import ExpCellFilter
+                    from ase.constraints import ExpCellFilter  # type: ignore[attr-defined]
 
                     target = ExpCellFilter(atoms)
 
@@ -103,7 +103,7 @@ class AseRelaxer:
             fnorms = np.linalg.norm(forces, axis=1)
             max_force = float(fnorms.max()) if len(fnorms) else 0.0
             energy = float(atoms.get_potential_energy())
-            relaxed = AseAtomsAdaptor.get_structure(atoms)
+            relaxed: Structure = AseAtomsAdaptor.get_structure(atoms)
             converged = max_force <= self.fmax * 1.5
             vchg = 100.0 * (relaxed.volume - v0) / v0
             return RelaxResult(

@@ -81,7 +81,7 @@ def generate_prototypes(
                 continue
             try:
                 new_struct = struct.copy()
-                new_struct.replace_species(assignment)
+                new_struct.replace_species(assignment)  # type: ignore[arg-type]
             except Exception:
                 continue
             els = sorted({str(e) for e in new_struct.composition.elements})

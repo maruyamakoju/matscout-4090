@@ -33,7 +33,9 @@ def compute_features(record: CandidateRecord) -> dict:
     if record.predicted_bandgap_ev is None:
         gap, direct, model, _ = predict_bandgap(record.get_structure())
     else:
-        gap, direct, model = record.predicted_bandgap_ev, record.predicted_direct_gap, record.bandgap_model
+        gap = record.predicted_bandgap_ev
+        direct = bool(record.predicted_direct_gap)
+        model = record.bandgap_model or "stored"
 
     lone_pair = els & LONE_PAIR_CATIONS
     soft_anions = els & _ABSORBER_ANIONS

@@ -42,7 +42,7 @@ def compute_features(record: CandidateRecord) -> dict:
     else:
         gap = record.predicted_bandgap_ev
         direct = bool(record.predicted_direct_gap)
-        model = record.bandgap_model
+        model = record.bandgap_model or "stored"
         gap_conf = 0.4
 
     is_metallic = gap is not None and gap < _METALLIC_GAP_EV

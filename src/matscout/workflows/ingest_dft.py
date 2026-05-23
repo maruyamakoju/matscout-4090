@@ -51,14 +51,14 @@ def parse_vasp(vasp_dir: Path) -> DFTResult | None:
             res.converged = bool(vr.converged)
             res.energy_per_atom = float(vr.final_energy) / len(vr.final_structure)
             gap, _cbm, _vbm, is_direct = vr.eigenvalue_band_properties
-            res.bandgap_ev = float(gap)
+            res.bandgap_ev = float(gap)  # type: ignore[arg-type]
             res.is_direct = bool(is_direct)
             res.formula = vr.final_structure.composition.reduced_formula
         else:
             from pymatgen.io.vasp.outputs import Outcar
 
             oc = Outcar(str(vasp_dir / "OUTCAR"))
-            res.energy_per_atom = float(oc.final_energy)  # total; per-atom unknown w/o structure
+            res.energy_per_atom = float(oc.final_energy)  # type: ignore[arg-type]  # total, not per-atom
     except Exception as exc:
         res.error = f"vasp_parse:{str(exc)[:100]}"
     return res
