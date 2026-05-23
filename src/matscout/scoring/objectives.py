@@ -11,6 +11,7 @@ from ..config.schema import CampaignConfig, GlobalConfig
 from ..data.elements import cost_penalty, scarcity_penalty, toxicity_penalty
 from ..data.schemas import CandidateRecord, ScoreResult
 from ..properties import battery, catalyst, co2_capture, semiconductor, solar
+from ..properties.bandgap import predict_bandgap
 from ..properties.synthesizability import synthesizability_score
 from ..validation.novelty import NoveltyIndex
 
@@ -84,6 +85,15 @@ def score_records(
             r.synthesizability_score = synthesizability_score(r)
         if novelty_index is not None and not r.novelty_score:
             r.novelty_score = novelty_index.score(r)
+        # persist a predicted bandgap on the record (used by reports/metadata/parquet)
+        if r.predicted_bandgap_ev is None:
+            try:
+                gap, direct, model_name, _ = predict_bandgap(r.get_structure())
+                r.predicted_bandgap_ev = round(gap, 3)
+                r.predicted_direct_gap = direct
+                r.bandgap_model = model_name
+            except Exception:
+                pass
 
         ctx = {"cohort_min_energy": cohort}
         if campaign.name == "co2_capture":

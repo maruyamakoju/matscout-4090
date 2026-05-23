@@ -71,6 +71,12 @@ def _heuristic_gap(comp: Composition) -> tuple[float, bool, float]:
 def predict_bandgap(obj: Structure | Composition) -> tuple[float, bool, str, float]:
     """Return (gap_ev, is_direct, model_name, confidence)."""
     comp = obj.composition if isinstance(obj, Structure) else obj
+    elements = {str(e) for e in comp.elements}
+    # Intermetallic / no electronegative anion -> metallic. Trust this over any
+    # composition-only regressor, which cannot reliably predict an exact zero gap.
+    if not (elements & (CHALCOGENS | HALOGENS | {"N", "P"})):
+        return 0.0, False, "metallic_chemistry", 0.6
+
     model = _load_surrogate()
     if model is not None:
         try:
@@ -78,8 +84,11 @@ def predict_bandgap(obj: Structure | Composition) -> tuple[float, bool, str, flo
 
             feat = ElementProperty.from_preset("magpie")
             X = [feat.featurize(comp)]
-            gap = float(model.predict(X)[0])
-            return max(0.0, gap), False, "surrogate_magpie", 0.7
+            gap = max(0.0, float(model.predict(X)[0]))
+            # surrogate gives the magnitude; reuse the chemistry heuristic for the
+            # direct/indirect guess (the regressor doesn't predict that).
+            _, direct, _ = _heuristic_gap(comp)
+            return gap, direct, "surrogate_magpie", 0.7
         except Exception:
             pass
     gap, direct, conf = _heuristic_gap(comp)
