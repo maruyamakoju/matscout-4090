@@ -177,6 +177,16 @@ def catalyst_surfaces(
     write_surface_report(results, g)
 
 
+@app.command("ingest-dft")
+def ingest_dft_cmd(campaign: str = typer.Option(...)):
+    """Ingest completed DFT runs from the queue and write an ML-vs-DFT comparison report."""
+    g = load_global_config()
+    from .workflows.ingest_dft import ingest_dft
+
+    for name in _campaigns_arg(campaign):
+        ingest_dft(name, g)
+
+
 @app.command()
 def benchmark():
     """Validate the pipeline: bandgap surrogate accuracy, relaxation sanity, determinism."""

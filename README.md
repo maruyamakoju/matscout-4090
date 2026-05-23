@@ -41,7 +41,29 @@ prints a clear warning. Without `torch`/`chgnet`/`mace`, relaxation runs in **dr
 | `matscout rank --campaign battery --top-k 200` | Pareto + weighted ranking |
 | `matscout export-dft --campaign battery --top-k 50` | VASP/QE input decks |
 | `matscout report --campaign battery` | Markdown shortlists + figures |
-| `matscout run-campaign --campaign all` | full pipeline, all campaigns |
+| `matscout run-campaign --campaign all` | full pipeline, all campaigns (writes `run_manifest.json`) |
+| `matscout catalyst-surfaces --top-k 8` | slab + adsorbate HER/OER/CO2RR analysis on top catalysts |
+| `matscout active-loop --campaign solar` | active-learning loop: select → mutate → relax → score (spec §8) |
+| `matscout ingest-dft --campaign solar` | parse completed DFT runs, write ML-vs-DFT comparison |
+| `matscout benchmark` | validate pipeline: surrogate accuracy, relaxation sanity, determinism |
+
+Relaxation **checkpoints/resumes** automatically (`--relax-limit` bounds long runs). See
+`docs/DFT_VERIFICATION.md` for cluster submission and `ROADMAP.md` for the research/product plan.
+
+### Service + dashboard
+
+```bash
+uvicorn matscout.service.api:app          # read-only query API (uv pip install -e ".[service]")
+streamlit run src/matscout/viz/dashboard.py   # interactive candidate explorer
+```
+
+### Reproducible (Docker, GPU)
+
+```bash
+docker build -t matscout:latest .
+docker run --gpus all -e MP_API_KEY=$MP_API_KEY -v $PWD/outputs:/app/outputs \
+  matscout:latest run-campaign --campaign all
+```
 
 ## Outputs
 
