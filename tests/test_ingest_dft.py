@@ -43,3 +43,25 @@ def test_parse_qe_extracts_energy(tmp_path):
 
 def test_parse_qe_missing_returns_none(tmp_path):
     assert parse_qe(tmp_path) is None
+
+
+def test_update_records_with_dft(tmp_path, nacl_structure):
+    from matscout.config.schema import GlobalConfig
+    from matscout.data.schemas import CandidateRecord
+    from matscout.data.store import load_parquet, save_parquet
+    from matscout.workflows.ingest_dft import update_records_with_dft
+    from matscout.workflows.paths import Paths
+
+    g = GlobalConfig(data_dir=str(tmp_path / "data"), output_dir=str(tmp_path / "out"))
+    rec = CandidateRecord.from_structure(nacl_structure, candidate_id="sub::1", source="manual_seed")
+    save_parquet([rec], Paths(g).ranked("solar"))
+
+    results = [DFTResult(deck="d", formula="NaCl", source="vasp", candidate_id="sub::1",
+                         energy_per_atom=-3.6, bandgap_ev=8.4, converged=True)]
+    n = update_records_with_dft(results, "solar", g)
+    assert n == 1
+    updated = load_parquet(Paths(g).data / "processed" / "solar" / "dft_verified.parquet")
+    assert updated[0].dft_verified is True
+    assert updated[0].dft_energy_per_atom == -3.6
+    assert updated[0].dft_bandgap_ev == 8.4
+    assert "dft:verified" in updated[0].tags

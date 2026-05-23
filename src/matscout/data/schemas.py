@@ -62,6 +62,11 @@ class CandidateRecord(BaseModel):
     bandgap_model: str | None = None
     predicted_direct_gap: bool | None = None
 
+    # DFT verification (filled by `matscout ingest-dft` once cluster runs complete)
+    dft_verified: bool = False
+    dft_energy_per_atom: float | None = None
+    dft_bandgap_ev: float | None = None
+
     # per-application scores (filled by the active campaign)
     battery_score: float | None = None
     semiconductor_score: float | None = None

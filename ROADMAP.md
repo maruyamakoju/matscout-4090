@@ -40,8 +40,12 @@ Goal: defensible, ideally publishable, materials candidates.
 2. **Better surrogates.** Replace composition-only bandgap with structure-aware models
    (MEGNet/M3GNet/matgl bandgap, or fine-tune); add a formation-energy model with proper
    elemental references; calibrate uncertainty (ensemble + conformal intervals).
-3. **Close the DFT loop.** Auto-ingest VASP/QE results, recompute true e_hull/gap, feed back
-   into active learning (the loop is built; wire the DFT-result parser).
+   _Deferred: matgl's pretrained MEGNet bandgap needs `dgl`, which has no wheel for the
+   installed torch 2.11/cu128 (Blackwell). Revisit when dgl supports torch ≥2.11, or pin an
+   older torch in a separate env._
+3. **Close the DFT loop.** [done: `ingest-dft` parses VASP/QE, writes ML-vs-DFT report, and
+   writes DFT energy/gap back into records (`dft_verified.parquet`).] Remaining: recompute true
+   e_hull with MP corrections and feed DFT deltas back into the active-learning acquisition.
 4. **Catalyst done right.** Surface phase diagrams (terminations, coverage, Pourbaix/applied
    potential, solvation) or an OCP/fairchem adsorption-energy model instead of the bulk proxy.
 5. **CO₂ for real.** Ingest CoRE MOF / QMOF; add GCMC (RASPA) or ML isotherm models for
