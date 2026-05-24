@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+title: "MatScout-4090: local high-throughput AI-for-materials discovery pipeline"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - name: "MatScout-4090 contributors"
+repository-code: "https://github.com/maruyamakoju/matscout-4090"
+license: MIT
+version: 0.1.0
+date-released: "2026-05-23"
+keywords:
+  - materials discovery
+  - machine-learning interatomic potentials
+  - CHGNet
+  - MACE
+  - high-throughput screening
+  - battery
+  - solar
+  - catalysis
+  - CO2 capture
+abstract: >-
+  MatScout-4090 is a local pipeline for inorganic-materials discovery across battery,
+  semiconductor, catalyst, solar, and CO2-capture applications. It generates candidate
+  structures (substitution + prototype enumeration), relaxes them with a CHGNet/MACE
+  ensemble, computes ML formation energies from elemental references, scores candidates
+  with application-specific objectives plus novelty and synthesizability, ranks them
+  (Pareto + weighted), and exports DFT-ready VASP/QE decks for cluster verification.

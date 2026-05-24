@@ -1,5 +1,10 @@
 # MatScout-4090
 
+[![CI](https://github.com/maruyamakoju/matscout-4090/actions/workflows/ci.yml/badge.svg)](https://github.com/maruyamakoju/matscout-4090/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)
+[![Checks: ruff · mypy · pytest](https://img.shields.io/badge/checks-ruff%20%C2%B7%20mypy%20%C2%B7%20pytest-success.svg)](CONTRIBUTING.md)
+
 Local high-throughput AI-for-materials discovery pipeline for inorganic materials across
 **battery, semiconductor, catalyst, solar, and CO₂-capture** applications.
 

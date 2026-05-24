@@ -4,7 +4,15 @@ version = "0.1.0"
 description = "MatScout-4090: local high-throughput AI-for-materials discovery pipeline"
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
-authors = [{ name = "MatScout" }]
+authors = [{ name = "MatScout-4090 contributors" }]
+license = "MIT"
+keywords = ["materials-discovery", "chgnet", "mace", "high-throughput-screening"]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Chemistry",
+]
 
 # Light core dependencies: install fast, enable the full pipeline on fixtures.
 dependencies = [

@@ -47,6 +47,56 @@ def main() -> None:  # pragma: no cover - interactive
     except Exception:
         st.info("Install plotly for interactive scatter (pip install -e '.[extra]').")
 
+    # ---- 3D structure viewer (plotly, no extra deps) ----
+    st.subheader("Structure viewer")
+    if "structure_cif" not in df.columns or df.empty:
+        st.info("No structures available.")
+        return
+    labels = [f"{r.reduced_formula}  ({r.candidate_id})" for r in df.head(300).itertuples()]
+    pick = st.selectbox("Candidate", labels)
+    cid = pick.split("(")[-1].rstrip(")")
+    row = df[df["candidate_id"] == cid].iloc[0]
+    _render_structure(st, row)
+
+
+def _render_structure(st, row) -> None:
+    import plotly.graph_objects as go
+    from pymatgen.core import Structure
+
+    c1, c2 = st.columns([2, 1])
+    with c2:
+        st.metric("final score", f"{row['final_score']:.3f}")
+        for k in ["predicted_bandgap_ev", "ml_e_above_hull", "ml_formation_energy_per_atom",
+                  "novelty_score", "uncertainty_score", "dft_verified"]:
+            if k in row and row[k] is not None:
+                st.write(f"**{k}**: {row[k]}")
+    with c1:
+        try:
+            s = Structure.from_str(row["structure_cif"], fmt="cif")
+        except Exception:
+            st.warning("Could not parse structure.")
+            return
+        xs, ys, zs, syms = [], [], [], []
+        for site in s:
+            xs.append(site.coords[0]); ys.append(site.coords[1]); zs.append(site.coords[2])
+            syms.append(site.specie.symbol)
+        palette = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2"]
+        uniq = sorted(set(syms))
+        cmap = {el: palette[i % len(palette)] for i, el in enumerate(uniq)}
+        fig = go.Figure()
+        for el in uniq:
+            idx = [i for i, e in enumerate(syms) if e == el]
+            fig.add_trace(go.Scatter3d(
+                x=[xs[i] for i in idx], y=[ys[i] for i in idx], z=[zs[i] for i in idx],
+                mode="markers", name=el,
+                marker=dict(size=8, color=cmap[el], line=dict(width=0.5, color="black")),
+            ))
+        fig.update_layout(height=460, margin=dict(l=0, r=0, t=10, b=0),
+                          scene=dict(aspectmode="data"))
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption(f"{s.composition.reduced_formula} · {len(s)} atoms · "
+                   f"SG {s.get_space_group_info()[1]}")
+
 
 if __name__ == "__main__":
     main()
