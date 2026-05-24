@@ -40,10 +40,32 @@ def cohort_relative_stability(record: CandidateRecord, cohort_min_energy: dict[s
     return max(0.0, 1.0 - delta / 0.3)
 
 
+def formation_stability_score(e_form: float | None) -> float:
+    """Map ML formation energy/atom (eV) to a 0..1 stability prior.
+
+    More-negative formation energy => more stable vs the elements. This is NOT a hull
+    distance (it ignores competing compounds), so it is used only as a fallback signal
+    with reduced confidence when no Materials Project hull is available.
+    """
+    if e_form is None:
+        return 0.0
+    if e_form >= 0.0:
+        return 0.1  # unstable vs elements
+    if e_form <= -1.5:
+        return 0.9
+    # linear ramp between 0 and -1.5 eV/atom -> 0.1 .. 0.9
+    return round(0.1 + 0.8 * (-e_form / 1.5), 3)
+
+
 def stability_for_record(record: CandidateRecord, cohort_min_energy: dict[str, float] | None = None) -> tuple[float, float]:
-    """Return (stability_score, confidence). Uses real hull if present, else cohort proxy."""
+    """Return (stability_score, confidence).
+
+    Priority: real e_above_hull (MP) > ML formation energy > cohort-relative proxy.
+    """
     if record.ml_e_above_hull is not None:
         return stability_score(record.ml_e_above_hull), 1.0
+    if record.ml_formation_energy_per_atom is not None:
+        return formation_stability_score(record.ml_formation_energy_per_atom), 0.55
     if cohort_min_energy is not None and record.ml_relaxed:
         return cohort_relative_stability(record, cohort_min_energy), 0.5
     return 0.0, 0.2

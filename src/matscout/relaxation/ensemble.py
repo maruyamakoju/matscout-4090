@@ -119,8 +119,8 @@ def _classify(record: CandidateRecord, campaign: CampaignConfig) -> str:
 
 _RELAXED_FIELDS = (
     "structure_cif", "structure_hash", "nsites", "spacegroup_symbol", "spacegroup_number",
-    "ml_relaxed", "ml_model", "ml_energy_per_atom", "ml_e_above_hull",
-    "relaxation_converged", "max_force_ev_a", "volume_change_pct",
+    "ml_relaxed", "ml_model", "ml_energy_per_atom", "ml_formation_energy_per_atom",
+    "ml_e_above_hull", "relaxation_converged", "max_force_ev_a", "volume_change_pct",
     "uncertainty_score", "rejection_reason", "tags",
 )
 
@@ -170,6 +170,11 @@ def relax_records(
             r.tags.append("dry_relax")
         return subset
 
+    # ML elemental references for real formation energies (computed/cached once)
+    from ..properties.formation import elemental_reference_energies, formation_energy_per_atom
+
+    refs = elemental_reference_energies(device=global_cfg.device)
+
     done = _load_checkpoint(checkpoint_path) if resume else {}
     if done:
         console.print(f"[cyan]Resume:[/] {len(done)} candidates already relaxed (from checkpoint)")
@@ -191,6 +196,9 @@ def relax_records(
             r.tags.append("relax_failed")
             continue
         _apply_relaxed(r, res, primary.name)
+        r.ml_formation_energy_per_atom = formation_energy_per_atom(
+            r.get_structure().composition, r.ml_energy_per_atom, refs
+        )
         energies = [res.energy_per_atom]
 
         for sec in secondaries:
